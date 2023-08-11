@@ -19,7 +19,7 @@ SECTIONS {
     .bss : ALIGN(4) {
         __bss = .;
         *(.bss .bss.* .sbss .sbss.*);
-        _bss_end = .;
+        __bss_end = .;
     }
 
     . = ALIGN(4);
