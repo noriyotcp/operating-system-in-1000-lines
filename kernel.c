@@ -1,15 +1,15 @@
 extern char __bss[], __bss_end[], __stack_top[];
 
-void *memset(void *buf, char c, size_t n)
+void *memset(void *buf, char c, unsigned int n)
 {
-    unit8_t *p = (unit8_t *) buf;
+    unsigned char *p = (unsigned char *) buf;
     while (n--)
         *p++ = c;
     return buf;
 }
 
 void kernel_main(void) {
-    memset(__bss, 0, __bss_end - (size_t) __bss);
+    memset(__bss, 0, (unsigned int) __bss_end - (unsigned int) __bss);
 
     for(;;);
 }
