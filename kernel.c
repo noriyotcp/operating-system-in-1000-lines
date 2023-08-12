@@ -121,6 +121,9 @@ void kernel_main(void) {
     printf("\n\nHello %s\n", "World via printf()");
     printf("1 + 2 = %d, %x\n", 1 + 2, 0x1234abcd);
 
+    WRITE_CSR(stvec, (uint32_t) kernel_entry);
+    __asm__ __volatile__("unimp"); // invalid op
+
     for(;;) {
         __asm__ __volatile__("wfi");
     };
