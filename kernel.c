@@ -201,6 +201,33 @@ void handle_trap(struct trap_frame *f) {
     PANIC("unexpected trap scause=%x, stval=%x, sepc=%x\n", scause, stval, user_pc);
 }
 
+struct process *proc_a;
+struct process *proc_b;
+
+void proc_a_entry(void) {
+    printf("starting process A\n");
+    while (1) {
+        putchar('A');
+        switch_context(&proc_a->sp, &proc_b->sp);
+
+        for (int i = 0; i < 30000000; i++) {
+            __asm__ __volatile__("nop");
+        }
+    }
+}
+
+void proc_b_entry(void) {
+    printf("starting process B\n");
+    while (1) {
+        putchar('B');
+        switch_context(&proc_b->sp, &proc_a->sp);
+
+        for (int i = 0; i < 30000000; i++) {
+            __asm__ __volatile__("nop");
+        }
+    }
+}
+
 void kernel_main(void) {
     memset(__bss, 0, (size_t) __bss_end - (size_t) __bss);
 
@@ -219,7 +246,11 @@ void kernel_main(void) {
     printf("alloc_pages test: paddr0=%x\n", paddr0);
     printf("alloc_pages test: paddr1=%x\n", paddr1);
 
-    PANIC("booted!");
+    proc_a = create_process((uint32_t) proc_a_entry);
+    proc_b = create_process((uint32_t) proc_b_entry);
+    proc_a_entry();
+
+    // PANIC("booted!");
     // for(;;) {
     //     __asm__ __volatile__("wfi");
     // };
