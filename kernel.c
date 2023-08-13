@@ -232,7 +232,7 @@ void proc_a_entry(void) {
     printf("starting process A\n");
     while (1) {
         putchar('A');
-        switch_context(&proc_a->sp, &proc_b->sp);
+        yield();
 
         for (int i = 0; i < 30000000; i++) {
             __asm__ __volatile__("nop");
@@ -244,7 +244,7 @@ void proc_b_entry(void) {
     printf("starting process B\n");
     while (1) {
         putchar('B');
-        switch_context(&proc_b->sp, &proc_a->sp);
+        yield();
 
         for (int i = 0; i < 30000000; i++) {
             __asm__ __volatile__("nop");
@@ -270,10 +270,15 @@ void kernel_main(void) {
     printf("alloc_pages test: paddr0=%x\n", paddr0);
     printf("alloc_pages test: paddr1=%x\n", paddr1);
 
+    idle_proc = create_process((uint32_t) NULL);
+    idle_proc->pid = -1; // idle
+    current_proc = idle_proc;
+
     proc_a = create_process((uint32_t) proc_a_entry);
     proc_b = create_process((uint32_t) proc_b_entry);
-    proc_a_entry();
 
+    yield();
+    PANIC("switched to idle process");
     // PANIC("booted!");
     // for(;;) {
     //     __asm__ __volatile__("wfi");
