@@ -305,47 +305,14 @@ void handle_trap(struct trap_frame *f) {
     } else {
         PANIC("unexpected trap scause=%x, stval=%x, sepc=%x\n", scause, stval, user_pc);
     }
-}
 
-struct process *proc_a;
-struct process *proc_b;
-
-void proc_a_entry(void) {
-    printf("starting process A\n");
-    while (1) {
-        putchar('A');
-        yield();
-
-        for (int i = 0; i < 30000000; i++) {
-            __asm__ __volatile__("nop");
-        }
-    }
-}
-
-void proc_b_entry(void) {
-    printf("starting process B\n");
-    while (1) {
-        putchar('B');
-        yield();
-
-        for (int i = 0; i < 30000000; i++) {
-            __asm__ __volatile__("nop");
-        }
-    }
+    WRITE_CSR(sepc, user_pc);
 }
 
 void kernel_main(void) {
     memset(__bss, 0, (size_t) __bss_end - (size_t) __bss);
-
-    const char *s = "\n\nHello World!\n";
-    for (int i = 0; s[i] != '\0'; i++) {
-        putchar(s[i]);
-    }
-    printf("\n\nHello %s\n", "World via printf()");
-    printf("1 + 2 = %d, %x\n", 1 + 2, 0x1234abcd);
-
+    printf("\n\n");
     WRITE_CSR(stvec, (uint32_t) kernel_entry);
-    // __asm__ __volatile__("unimp"); // invalid op
 
     paddr_t paddr0 = alloc_pages(2);
     paddr_t paddr1 = alloc_pages(1);
