@@ -1,6 +1,7 @@
 #include "kernel.h"
 #include "common.h"
 
+extern char __kernel_base[];
 extern char __bss[], __bss_end[], __stack_top[];
 extern char __free_ram[], __free_ram_end[];
 
@@ -217,10 +218,18 @@ struct process *create_process(uint32_t pc) {
     *--sp = 0;                      // s0
     *--sp = (uint32_t) pc;          // ra
 
+    uint32_t *page_table = (uint32_t *) alloc_pages(1);
+
+    // カーネルのページをマッピングする
+    for (paddr_t paddr = (paddr_t)__kernel_base;
+         paddr < (paddr_t)__free_ram_end; paddr += PAGE_SIZE)
+        map_page(page_table, paddr, paddr, PAGE_R | PAGE_W | PAGE_X);
+
     // 各フィールドを初期化
     proc->pid = i + 1;
     proc->state = PROC_RUNNABLE;
     proc->sp = (uint32_t) sp;
+    proc->page_table = page_table;
     return proc;
 };
 
