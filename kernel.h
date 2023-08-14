@@ -4,6 +4,7 @@
 #define PROCS_MAX 8     // 最大プロセス数
 #define PROC_UNUSED 0   // 未使用のプロセス管理構造体
 #define PROC_RUNNABLE 1 // 実行可能なプロセス
+#define PROC_EXITED 2
 #define SATP_SV32 (1u << 31)
 #define SSTATUS_SPIE (1 << 5)
 #define SCAUSE_ECALL 8
