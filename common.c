@@ -34,6 +34,8 @@ int strcmp(const char *s1, const char *s2) {
     return *s1 - *s2;
 }
 
+void putchar(char ch);
+
 void printf(const char *fmt, ...) {
     va_list vargs;
     va_start(vargs, fmt);
