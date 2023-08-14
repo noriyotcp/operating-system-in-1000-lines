@@ -20,6 +20,10 @@ void putchar(char ch) {
     syscall(SYS_PUTCHAR, ch, 0, 0);
 }
 
+int getchar(void) {
+    return syscall(SYS_GETCHAR, 0, 0, 0);
+}
+
 __attribute__((noreturn)) void exit(void) {
     for (;;);
 }
