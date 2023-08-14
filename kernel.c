@@ -285,12 +285,26 @@ void yield(void) {
     switch_context(&prev->sp, &next->sp);
 }
 
+void handle_syscall(struct trap_frame *f) {
+    switch (f->a3) {
+    case SYS_PUTCHAR:
+        putchar(f->a0);
+        break;
+    default:
+        PANIC("unexpected syscall a3=%x\n", f->a3);
+    }
+}
+
 void handle_trap(struct trap_frame *f) {
     uint32_t scause = READ_CSR(scause);
     uint32_t stval = READ_CSR(stval);
     uint32_t user_pc = READ_CSR(sepc);
-
-    PANIC("unexpected trap scause=%x, stval=%x, sepc=%x\n", scause, stval, user_pc);
+    if (scause == SCAUSE_ECALL) {
+        handle_syscall(f);
+        user_pc += 4;
+    } else {
+        PANIC("unexpected trap scause=%x, stval=%x, sepc=%x\n", scause, stval, user_pc);
+    }
 }
 
 struct process *proc_a;

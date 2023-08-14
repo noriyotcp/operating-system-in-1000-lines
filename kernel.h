@@ -6,6 +6,7 @@
 #define PROC_RUNNABLE 1 // 実行可能なプロセス
 #define SATP_SV32 (1u << 31)
 #define SSTATUS_SPIE (1 << 5)
+#define SCAUSE_ECALL 8
 #define PAGE_V    (1 << 0) // 有効化ビット
 #define PAGE_R    (1 << 1) // 読み込み可能
 #define PAGE_W    (1 << 2) // 書き込み可能
