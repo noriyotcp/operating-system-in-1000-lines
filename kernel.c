@@ -67,6 +67,22 @@ void virtio_reg_fetch_and_or32(unsigned offset, uint32_t value) {
     virtio_reg_write32(offset, virtio_reg_read32(offset) | value);
 }
 
+struct virtio_virtq *virtq_init(unsigned index) {
+    paddr_t virtq_paddr = alloc_pages(align_up(sizeof(struct virtio_virtq), PAGE_SIZE) / PAGE_SIZE);
+    struct virtio_virtq *vq = (struct virtio_virtq *) virtq_paddr;
+    vq->queue_index = index;
+    vq->used_index = (volatile uint16_t *) &vq->used.index;
+    // 1. Select the queue writing its index (first queue is 0) to QueueSel.
+    virtio_reg_write32(VIRTIO_REG_QUEUE_SEL, index);
+    // 5. Notify the device about the queue size by writing the size to QueueNum.
+    virtio_reg_write32(VIRTIO_REG_QUEUE_NUM, VIRTQ_ENTRY_NUM);
+    // 6. Notify the device about the used alignment by writing its value in bytes to QueueAlign.
+    virtio_reg_write32(VIRTIO_REG_QUEUE_ALIGN, 0);
+    // 7. Write the physical number of the first page of the queue to the QueuePFN register.
+    virtio_reg_write32(VIRTIO_REG_QUEUE_PFN, virtq_paddr);
+    return vq;
+}
+
 void virtio_blk_init(void) {
     if (virtio_req_read32(VIRTIO_REG_MAGIC) != 0x74726976)
         PANIC("virtio: invalid magic value");
