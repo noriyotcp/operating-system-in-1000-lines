@@ -122,10 +122,15 @@ struct virtio_virtq {
 } __attribute__((packed));
 
 struct virtio_blk_req {
+  // 1つ目のディスクリプタ: デバイスからは読み込み専用
   uint32_t type;
   uint32_t reserved;
   uint64_t sector;
+
+  // 2つ目のディスクリプタ: 読み込み処理の場合は、デバイスから書き込み可 (VIRTQ_DESC_F_WRITE)
   uint8_t data[SECTOR_SIZE];
+
+  // 3つ目のディスクリプタ: デバイスから書き込み可 (VIRTQ_DESC_F_WRITE)
   uint8_t status;
 } __attribute__((packed));
 
