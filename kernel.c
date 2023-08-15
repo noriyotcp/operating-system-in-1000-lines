@@ -99,11 +99,11 @@ struct virtio_virtq *virtq_init(unsigned index) {
 }
 
 void virtio_blk_init(void) {
-    if (virtio_req_read32(VIRTIO_REG_MAGIC) != 0x74726976)
+    if (virtio_reg_read32(VIRTIO_REG_MAGIC) != 0x74726976)
         PANIC("virtio: invalid magic value");
-    if (virtio_req_read32(VIRTIO_REG_VERSION) != 1)
+    if (virtio_reg_read32(VIRTIO_REG_VERSION) != 1)
         PANIC("virtio: invalid version");
-    if (virtio_req_read32(VIRTIO_REG_DEVICE_ID) != VIRTIO_DEVICE_BLK)
+    if (virtio_reg_read32(VIRTIO_REG_DEVICE_ID) != VIRTIO_DEVICE_BLK)
         PANIC("virtio: invalid device id");
 
     // 1. Reset the device.
