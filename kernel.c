@@ -42,6 +42,11 @@ struct sbiret sbi_call(long arg0, long arg1, long arg2, long arg3, long arg4, lo
     return (struct sbiret){.error = a0, .value = a1};
 };
 
+struct virtio_virtq *blk_request_vq;
+struct virtio_blk_req *blk_req;
+paddr_t blk_req_paddr;
+unsigned blk_capacity;
+
 uint8_t virtio_reg_read8(unsigned offset) {
     return *((volatile uint8_t *) (VIRTIO_BLK_PADDR + offset));
 }
@@ -60,6 +65,36 @@ void virtio_reg_write32(unsigned offset, uint32_t value) {
 
 void virtio_reg_fetch_and_or32(unsigned offset, uint32_t value) {
     virtio_reg_write32(offset, virtio_reg_read32(offset) | value);
+}
+
+void virtio_blk_init(void) {
+    if (virtio_req_read32(VIRTIO_REG_MAGIC) != 0x74726976)
+        PANIC("virtio: invalid magic value");
+    if (virtio_req_read32(VIRTIO_REG_VERSION) != 1)
+        PANIC("virtio: invalid version");
+    if (virtio_req_read32(VIRTIO_REG_DEVICE_ID) != VIRTIO_DEVICE_BLK)
+        PANIC("virtio: invalid device id");
+
+    // 1. Reset the device.
+    virtio_reg_write32(VIRTIO_REG_DEVICE_STATUS, 0);
+    // 2. Set the ACKNOWLEDGE status bit: the quest OS has noticed the device.
+    virtio_reg_fetch_and_or32(VIRTIO_REG_DEVICE_STATUS, VIRTIO_STATUS_ACK);
+    // 3. Set the DRIVER status bit.
+    virtio_reg_fetch_and_or32(VIRTIO_REG_DEVICE_STATUS, VIRTIO_STATUS_DRIVER);
+    // 5. Set the FEATURES_OK status bit.
+    virtio_reg_fetch_and_or32(VIRTIO_REG_DEVICE_STATUS, VIRTIO_STATUS_FEAT_OK);
+    // 7. Perform device-specific setup, including discovery of virtqueues for the device.
+    blk_request_vq = virtq_init(0);
+    // 8. Set the DRIVER_OK status bit.
+    virtio_reg_write32(VIRTIO_REG_DEVICE_STATUS, VIRTIO_STATUS_DRIVER_OK);
+
+    // Get the size of the disk.
+    blk_capacity = virtio_reg_read64(VIRTIO_REG_DEVICE_CONFIG + 0) * SECTOR_SIZE;
+    printf("virtio-blk: capacity is %d bytes\n", blk_capacity);
+
+    // デバイスへの処理要求を格納する領域を確保する
+    blk_req_paddr = alloc_pages(align_up(sizeof(*blk_req), PAGE_SIZE) / PAGE_SIZE);
+    blk_req = (struct virtio_blk_req *) blk_req_paddr;
 }
 
 void map_page(uint32_t *table1, uint32_t vaddr, paddr_t paddr, uint32_t flags) {
