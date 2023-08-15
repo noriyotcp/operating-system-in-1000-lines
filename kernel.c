@@ -377,6 +377,9 @@ struct process *create_process(const void *image, size_t image_size) {
          paddr < (paddr_t)__free_ram_end; paddr += PAGE_SIZE)
         map_page(page_table, paddr, paddr, PAGE_R | PAGE_W | PAGE_X);
 
+    // virtio-blk
+    map_page(page_table, VIRTIO_BLK_PADDR, VIRTIO_BLK_PADDR, PAGE_R | PAGE_W);
+
     // ユーザーのページをマッピングする
     for (uint32_t off = 0; off < image_size; off += PAGE_SIZE) {
         paddr_t page = alloc_pages(1);
@@ -468,6 +471,7 @@ void kernel_main(void) {
     memset(__bss, 0, (size_t) __bss_end - (size_t) __bss);
     printf("\n\n");
     WRITE_CSR(stvec, (uint32_t) kernel_entry);
+    virtio_blk_init();
 
     paddr_t paddr0 = alloc_pages(2);
     paddr_t paddr1 = alloc_pages(1);
