@@ -473,18 +473,26 @@ void kernel_main(void) {
     WRITE_CSR(stvec, (uint32_t) kernel_entry);
     virtio_blk_init();
 
-    paddr_t paddr0 = alloc_pages(2);
-    paddr_t paddr1 = alloc_pages(1);
-    printf("alloc_pages test: paddr0=%x\n", paddr0);
-    printf("alloc_pages test: paddr1=%x\n", paddr1);
+    // paddr_t paddr0 = alloc_pages(2);
+    // paddr_t paddr1 = alloc_pages(1);
+    // printf("alloc_pages test: paddr0=%x\n", paddr0);
+    // printf("alloc_pages test: paddr1=%x\n", paddr1);
 
     idle_proc = create_process(NULL, 0);
     idle_proc->pid = -1; // idle
     current_proc = idle_proc;
 
-    create_process(_binary_shell_bin_start, (size_t) _binary_shell_bin_size);
+    // create_process(_binary_shell_bin_start, (size_t) _binary_shell_bin_size);
 
     yield();
+
+    char buf[SECTOR_SIZE];
+    read_write_disk(buf, 0, false);
+    printf("first sector: %s\n", buf);
+
+    strcpy(buf, "hello from kernel!!!\n");
+    read_write_disk(buf, 0, true);
+
     PANIC("switched to idle process");
     // PANIC("booted!");
     // for(;;) {
