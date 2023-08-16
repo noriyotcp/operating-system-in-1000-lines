@@ -14,6 +14,8 @@
 #define PAGE_X    (1 << 3) // 実行可能
 #define PAGE_U    (1 << 4) // ユーザーモードでアクセス可能
 #define USER_BASE 0x1000000
+#define FILES_MAX 2
+#define DISK_MAX_SIZE align_up(sizeof(struct file) * FILES_MAX, SECTOR_SIZE)
 
 #define SECTOR_SIZE       512
 #define VIRTQ_ENTRY_NUM   16
@@ -133,6 +135,34 @@ struct virtio_blk_req {
   // 3つ目のディスクリプタ: デバイスから書き込み可 (VIRTQ_DESC_F_WRITE)
   uint8_t status;
 } __attribute__((packed));
+
+struct tar_header {
+  char name[100];
+  char mode[8];
+  char uid[8];
+  char gid[8];
+  char size[12];
+  char mtime[12];
+  char checksum[8];
+  char type;
+  char linkname[100];
+  char magic[6];
+  char version[2];
+  char uname[32];
+  char gname[32];
+  char devmajor[8];
+  char devminor[8];
+  char prefix[155];
+  char padding[12];
+  char data[]; // ヘッダに続くデータ領域を指す配列 (フレキシブル配列メンバ)
+} __attribute__((packed));
+
+struct file {
+  bool in_use;      // このファイルエントリが使われているか
+  char name[100];   // ファイル名
+  char data[1024];  // ファイルの内容
+  size_t size;      // ファイルサイズ
+};
 
 #define READ_CSR(reg)                                                          \
   ({                                                                           \
